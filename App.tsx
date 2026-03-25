@@ -4,7 +4,7 @@ import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Keyboard
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowUp, Scale, Plus, Mic, Headphones } from 'lucide-react-native';
 import { Message } from './src/types';
-import { analyzeLegalSituation } from './src/services/api';
+import { analyzeLegalSituation, sendEmailReceipt } from './src/services/api';
 
 function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -33,6 +33,9 @@ function ChatScreen() {
         aiData: result 
       };
       setMessages((prev) => [...prev, aiMsg]);
+      
+      // Envia o comprovante personalizado via nova API
+      sendEmailReceipt(userText, result);
     } catch (error: any) {
       const errorMsg: Message = {
         id: (Date.now() + 1).toString(),
