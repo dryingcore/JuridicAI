@@ -148,13 +148,19 @@ flowchart TD
     ListaAdv --> VerPerfil[Perfil do advogado - OAB, estrelas, certificações]
     VerPerfil --> Contato[Entrar em Contato]
 
-    Contato --> ChatInterno[Chat interno com aviso de sensibilidade]
-    ChatInterno --> AdvResponde[Advogado responde no painel]
+    Contato --> CriaChat[Backend cria documento de chat no Firestore]
+    CriaChat --> AnexaContexto[Anexa aiContext com resumo + análise + artigos ao documento]
+    AnexaContexto --> ChatInterno[Abre chat interno com aviso de sensibilidade]
+
+    ChatInterno --> AdvVeContexto[Advogado vê card fixo com o contexto da IA antes das mensagens]
+    AdvVeContexto --> AdvResponde[Advogado responde já ciente da situação]
     AdvResponde --> BotaoWhats[Advogado envia botão WhatsApp]
     BotaoWhats --> Redirect[Usuário vai para WhatsApp do advogado]
 
     AdvResponde --> FeedbackPrompt[Encerrar atendimento → prompt de avaliação]
     FeedbackPrompt --> Estrelas[Usuário dá nota 1–5 + comentário]
+
+    ListaChatsUser[Lista de chats do usuário] --> ChatInterno
 ```
 
 ---
@@ -249,15 +255,48 @@ flowchart LR
 
 ---
 
-### 🔜 FASE 4 — Chat Interno + Botão WhatsApp
+### 🔜 FASE 4 — Chat Interno + Contexto da IA + Botão WhatsApp
 
 **Complexidade:** 🔴 Alta | **Estimativa:** 2–3 semanas
 
 **O que fazer:**
-- Chat baseado em Firestore (`chats/{id}/messages`)
-- Aviso fixo no topo: *"Este não é um lugar para tratar informações sensíveis..."*
+
+**Criação do chat com contexto:**
+- Ao clicar em "Entrar em Contato", o app envia ao backend o `aiContext` (objeto `AIResponseData` da conversa atual) junto ao `lawyerId`
+- Backend cria um documento no Firestore com estrutura:
+  ```json
+  {
+    "userId": "...",
+    "lawyerId": "...",
+    "status": "open",
+    "aiContext": {
+      "resumo": "...",
+      "analise": "...",
+      "artigos": [...],
+      "vara": "...",
+      "acao_recomendada": true,
+      "ratio_decidendi": "..."
+    },
+    "createdAt": "..."
+  }
+  ```
+- O campo `aiContext` **não é uma mensagem** — é metadata do chat, exibida como um card fixo antes da conversa
+
+**Visualização pelo advogado:**
+- No painel do advogado, cada chat lista: nome do usuário + trecho do `resumo`
+- Ao abrir o chat, o advogado vê um **card de contexto fixo no topo** (não rolável junto com as mensagens), com: resumo, análise, artigos, vara e `acao_recomendada`
+- Isso elimina perguntas redundantes — o advogado já sabe do que se trata antes de digitar qualquer coisa
+
+**Lista de chats do usuário:**
+- O usuário também possui uma tela de chats ativos e histórico
+- Cada item da lista exibe: foto + nome do advogado, trecho da última mensagem e data
+- Ao abrir, o usuário vê o mesmo card de contexto da IA no topo (o próprio resumo da consulta que originou o contato)
+- Badge de mensagens não lidas por conversa
+
+**Restante do chat:**
+- Aviso fixo abaixo do contexto: *"Este não é um lugar para tratar informações sensíveis..."*
+- Mensagens em tempo real via Firestore (`chats/{id}/messages`)
 - Notificações push via FCM ao receber mensagem
-- Painel do advogado: lista de chats ativos
 - Advogado cadastra número de WhatsApp no perfil
 - Botão no chat que abre `https://wa.me/{numero}?text=...`
 
