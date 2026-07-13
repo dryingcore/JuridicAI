@@ -196,7 +196,7 @@ flowchart LR
 
 - Chat funcional com Maritaca AI
 - Parsing estruturado JSON
-- UI dark mode mobile-first
+- UI dark mode mobile-first 
 - Envio de comprovante por e-mail
 
 > [!IMPORTANT]
