@@ -1,6 +1,10 @@
 import { AIResponseData } from '../types';
+import Constants from 'expo-constants';
 
-const API_KEY = process.env.EXPO_PUBLIC_MARITACA_API_KEY;
+// Lê a chave do extra definido em app.config.js (funciona em Expo Go e em APKs compilados)
+const API_KEY: string | undefined =
+  Constants.expoConfig?.extra?.maritacaApiKey ??
+  process.env.EXPO_PUBLIC_MARITACA_API_KEY;
 
 const SYSTEM_PROMPT = `
 Você é um assistente jurídico avançado.
