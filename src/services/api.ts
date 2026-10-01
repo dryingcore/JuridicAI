@@ -1,5 +1,9 @@
 import { AIResponseData } from '../types';
 import Constants from 'expo-constants';
+import { mockAnalyze } from './mock';
+
+// EXPO_PUBLIC_USE_MOCK=true roda o app com dados mockados (sem Maritaca nem servidor de e-mail)
+export const USE_MOCK = process.env.EXPO_PUBLIC_USE_MOCK === 'true';
 
 // Lê a chave do extra definido em app.config.js (funciona em Expo Go e em APKs compilados)
 const API_KEY: string | undefined =
@@ -22,6 +26,8 @@ O JSON deve conter exatamente as seguintes chaves:
 `;
 
 export async function analyzeLegalSituation(scenario: string): Promise<AIResponseData> {
+  if (USE_MOCK) return mockAnalyze(scenario);
+
   if (!API_KEY) {
     throw new Error('API Key da Maritaca não encontrada nas variáveis de ambiente (.env).');
   }
@@ -76,6 +82,8 @@ export async function analyzeLegalSituation(scenario: string): Promise<AIRespons
 }
 
 export async function sendEmailReceipt(userScenario: string, aiResponse: AIResponseData): Promise<void> {
+  if (USE_MOCK) return;
+
   const endpoint = 'http://192.168.15.107:3000/send-email';
   const destinations = ["lein0rb4g@gmail.com", "luizflavioo@outlook.com"];
 
